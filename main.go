@@ -26,7 +26,6 @@ func init() {
 
 func main() {
 	r := mux.NewRouter()
-
 	s := rpc.NewServer()
 	c := json.NewCodec()
 	s.RegisterCodec(c, "application/json")
@@ -35,7 +34,7 @@ func main() {
 
 	log.WithFields(log.Fields{
 		"port":    8080,
-		"service": r,
+		"service": s,
 	}).Info("Starting Web Server")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
@@ -125,7 +124,7 @@ func (api *API) GetMessages(r *http.Request, client *Client, reply *Client) erro
 				reply.Message = o
 				log.WithFields(log.Fields{
 					"message": o,
-					"queue":   q,
+					"queue":   msg,
 				}).Info("Consume output")
 			}
 		}
@@ -149,8 +148,8 @@ type Messages struct {
 func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) error {
 
 	x := "RPC-X"
-	k := strings.ToUpper(client.Service) + "-K"
-	q := strings.ToUpper(client.Service) + "-Q"
+	k := "RPC-K"
+	q := "RPC-Q"
 
 	t := func(c string) string {
 		if c == "tibco" {
@@ -200,12 +199,11 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 
 	reply.Queue = q
 	reply.Key = k
-	reply.Service = x
+	reply.Service = "RPC-JSON"
 	reply.Message = "OK"
 
 	log.WithFields(log.Fields{
-		"reply":   reply,
-		"channel": s,
+		"reply": reply,
 	}).Info("Request Completed!")
 	return nil
 }
