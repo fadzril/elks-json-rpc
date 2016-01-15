@@ -148,7 +148,7 @@ type Messages struct {
 // API: SendMessage
 func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) error {
 
-	x := strings.ToUpper(client.Service) + "-X"
+	x := "RPC-X"
 	k := strings.ToUpper(client.Service) + "-K"
 	q := strings.ToUpper(client.Service) + "-Q"
 
