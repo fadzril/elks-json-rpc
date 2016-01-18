@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	AmpqServer = "c0040065.itcs.hp.com:5672"
+	// AmpqServer = "c0040065.itcs.hp.com:5672"
+	AmpqServer = "15.48.8.254:5672"
 	AmpqUser   = "guest"
 	AmpqPass   = "guest"
 )
@@ -172,7 +173,10 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 		return err
 	}
 
+
 	u := MakeURI()
+	fmt.Println("READY MAKE CONNECTION ", u, x)
+
 	mq, _ := amqp.Dial(u)
 	defer mq.Close()
 
