@@ -173,6 +173,8 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 	}
 
 	u := MakeURI()
+	fmt.Println("READY MAKE CONNECTION ", u, x)
+
 	mq, _ := amqp.Dial(u)
 	defer mq.Close()
 
