@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	AmpqServer = "c0040065.itcs.hp.com:5672"
-	AmpqUser   = "guest"
-	AmpqPass   = "guest"
+	Server = "c0040065.itcs.hp.com:5672"
+	User   = "guest"
+	Pass   = "guest"
 )
 
 func init() {
@@ -54,7 +54,7 @@ type API struct{}
 // Comments
 func MakeURI() string {
 	//return "amqp://" + AMQP_USER + ":" + AMQP_PASS + "@" + AMQP_SERVER
-	return "amqp://" + AmpqUser + ":" + AmpqPass + "@" + AmpqServer
+	return "amqp://" + User + ":" + Pass + "@" + Server
 }
 
 // Comments
@@ -152,7 +152,7 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 	q := "RPC-Q"
 
 	t := func(c string) string {
-		if c == "tibco" {
+		if strings.ToLower(c) == "tibco" {
 			return "REALTIME"
 		}
 		return strings.ToUpper(c)
