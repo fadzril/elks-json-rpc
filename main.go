@@ -12,19 +12,33 @@ import (
 	"github.com/gorilla/rpc"
 	"github.com/gorilla/rpc/json"
 	"github.com/streadway/amqp"
-)
-
-const (
-	Server = "c0040065.itcs.hp.com:5672"
-	User   = "guest"
-	Pass   = "guest"
+	"github.com/zpatrick/go-config"
 )
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 }
 
+func initConfig() *config.Config {
+	iniFile := config.NewINIFile("config.ini")
+	return config.NewConfig([]config.Provider{iniFile})
+}
+
 func main() {
+
+	cfg := initConfig()
+	if err := cfg.Load(); err != nil {
+		log.Println(err)
+	}
+
+	// Environment Config
+	host, _ := cfg.String("rabbit.host")
+	port, _ := cfg.String("rabbit.port")
+	user, _ := cfg.String("rabbit.user")
+	pwd, _ := cfg.String("rabbit.pass")
+	api := &API{url: "amqp://" + user + ":" + pwd + "@" + host + ":" + port}
+	log.Println("Connecting to RABBIT URI: ", api.url)
+
 	r := mux.NewRouter()
 	s := rpc.NewServer()
 	c := json.NewCodec()
@@ -33,8 +47,7 @@ func main() {
 	r.Handle("/api", s)
 
 	log.WithFields(log.Fields{
-		"port":    8080,
-		"service": s,
+		"port": 8080,
 	}).Info("Starting Web Server")
 
 	log.Fatal(http.ListenAndServe(":8080", r))
@@ -49,15 +62,20 @@ type Client struct {
 }
 
 // API struct
-type API struct{}
-
-// Comments
-func MakeURI() string {
-	//return "amqp://" + AMQP_USER + ":" + AMQP_PASS + "@" + AMQP_SERVER
-	return "amqp://" + User + ":" + Pass + "@" + Server
+type API struct {
+	url string
 }
 
-// Comments
+// Messages struct
+type Messages struct {
+	Tags      []string `json:"tags"`
+	Version   string   `json:"@version"`
+	Timestamp string   `json:"@timestamp"`
+	Message   string   `json:"message"`
+	Type      string   `json:"type"`
+}
+
+// SetupMQ ...
 func SetupMQ(uri string) (ch *amqp.Channel, err error) {
 	conn, err := amqp.Dial(uri)
 	defer conn.Close()
@@ -87,11 +105,10 @@ func failOnError(err error, msg string) {
 	}
 }
 
-// Comments
+// GetMessages ...
 func (api *API) GetMessages(r *http.Request, client *Client, reply *Client) error {
 
-	u := MakeURI()
-	mq, _ := amqp.Dial(u)
+	mq, _ := amqp.Dial(api.url)
 	defer mq.Close()
 
 	s, e := mq.Channel()
@@ -135,16 +152,7 @@ func (api *API) GetMessages(r *http.Request, client *Client, reply *Client) erro
 	return nil
 }
 
-// Messages struct
-type Messages struct {
-	Tags      []string `json:"tags"`
-	Version   string   `json:"@version"`
-	Timestamp string   `json:"@timestamp"`
-	Message   string   `json:"message"`
-	Type      string   `json:"type"`
-}
-
-// API: SendMessage
+// SendMessage ...
 func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) error {
 
 	x := "RPC-X"
@@ -172,10 +180,9 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 		return err
 	}
 
-	u := MakeURI()
-	fmt.Println("READY MAKE CONNECTION ", u, x)
+	fmt.Println("READY MAKE CONNECTION ", api.url, x)
 
-	mq, _ := amqp.Dial(u)
+	mq, _ := amqp.Dial(api.url)
 	defer mq.Close()
 
 	s, e := mq.Channel()
