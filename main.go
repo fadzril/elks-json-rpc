@@ -15,6 +15,10 @@ import (
 	"github.com/zpatrick/go-config"
 )
 
+var (
+	RABBIT_URI string
+)
+
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
 }
@@ -30,14 +34,13 @@ func main() {
 	if err := cfg.Load(); err != nil {
 		log.Println(err)
 	}
-
 	// Environment Config
 	host, _ := cfg.String("rabbit.host")
 	port, _ := cfg.String("rabbit.port")
 	user, _ := cfg.String("rabbit.user")
 	pwd, _ := cfg.String("rabbit.pass")
-	apis := &API{url: "amqp://" + user + ":" + pwd + "@" + host + ":" + port}
-	log.Println("Connecting to RABBIT URI: ", apis.url)
+	RABBIT_URI = string(fmt.Sprintf("amqp://%s:%s@%s:%s", user, pwd, host, port))
+	log.Println("Connecting to RABBIT URI: ", RABBIT_URI)
 
 	r := mux.NewRouter()
 	s := rpc.NewServer()
@@ -108,7 +111,7 @@ func failOnError(err error, msg string) {
 // GetMessages ...
 func (api *API) GetMessages(r *http.Request, client *Client, reply *Client) error {
 
-	mq, _ := amqp.Dial(api.url)
+	mq, _ := amqp.Dial(RABBIT_URI)
 	defer mq.Close()
 
 	s, e := mq.Channel()
@@ -180,9 +183,9 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 		return err
 	}
 
-	fmt.Println("READY MAKE CONNECTION ", api.url, x)
+	fmt.Println("READY MAKE CONNECTION ", RABBIT_URI, x)
 
-	mq, _ := amqp.Dial(api.url)
+	mq, _ := amqp.Dial(RABBIT_URI)
 	defer mq.Close()
 
 	s, e := mq.Channel()
