@@ -36,8 +36,8 @@ func main() {
 	port, _ := cfg.String("rabbit.port")
 	user, _ := cfg.String("rabbit.user")
 	pwd, _ := cfg.String("rabbit.pass")
-	api := &API{url: "amqp://" + user + ":" + pwd + "@" + host + ":" + port}
-	log.Println("Connecting to RABBIT URI: ", api.url)
+	apis := &API{url: "amqp://" + user + ":" + pwd + "@" + host + ":" + port}
+	log.Println("Connecting to RABBIT URI: ", apis.url)
 
 	r := mux.NewRouter()
 	s := rpc.NewServer()
