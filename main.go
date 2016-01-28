@@ -4,6 +4,7 @@ import (
 	JSON "encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"runtime"
 	"strings"
@@ -27,10 +28,16 @@ func init() {
 
 func initConfig() *config.Config {
 
-	_, dirname, _, _ := runtime.Caller(1)
-	filename := path.Join(path.Dir(dirname), "config.ini")
+	var filename string
+	server_path := os.Getenv("RPC_SERVER_PATH")
+	if server_path == "" {
+		_, dirname, _, _ := runtime.Caller(1)
+		filename = path.Join(path.Dir(dirname), "config.ini")
+	} else {
+		filename = fmt.Sprintf("%s/config.ini", server_path)
+	}
 
-	iniFile := config.NewINIFile("./config.ini")
+	iniFile := config.NewINIFile(filename)
 	log.WithFields(log.Fields{
 		"filename": filename,
 	}).Info("Reading config file")
