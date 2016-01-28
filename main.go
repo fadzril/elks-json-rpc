@@ -4,6 +4,7 @@ import (
 	JSON "encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -24,7 +25,12 @@ func init() {
 }
 
 func initConfig() *config.Config {
-	iniFile := config.NewINIFile("config.ini")
+	cwd := os.Getenv("PWD")
+	iniFile := config.NewINIFile(cwd + "/config.ini")
+	log.WithFields(log.Fields{
+		"filename": (*iniFile),
+	}).Info("Reading config file")
+
 	return config.NewConfig([]config.Provider{iniFile})
 }
 
@@ -40,7 +46,9 @@ func main() {
 	user, _ := cfg.String("rabbit.user")
 	pwd, _ := cfg.String("rabbit.pass")
 	RABBIT_URI = string(fmt.Sprintf("amqp://%s:%s@%s:%s", user, pwd, host, port))
-	log.Println("Connecting to RABBIT URI: ", RABBIT_URI)
+	log.WithFields(log.Fields{
+		"server": RABBIT_URI,
+	}).Info("Connecting to server")
 
 	r := mux.NewRouter()
 	s := rpc.NewServer()
@@ -72,7 +80,7 @@ type API struct {
 // Messages struct
 type Messages struct {
 	Tags      []string `json:"tags"`
-	Version   string   `json:"@version"`
+	Version   int      `json:"@version"`
 	Timestamp string   `json:"@timestamp"`
 	Message   string   `json:"message"`
 	Type      string   `json:"type"`
@@ -170,7 +178,7 @@ func (api *API) SendMessage(r *http.Request, client *Client, reply *Client) erro
 	}
 	b := &Messages{
 		Tags:      []string{strings.ToLower(client.Service)},
-		Version:   "1.0",
+		Version:   1,
 		Timestamp: time.Now().Format(time.RFC3339),
 		Message:   client.Message,
 		Type:      t(client.Service),
