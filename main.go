@@ -30,9 +30,9 @@ func initConfig() *config.Config {
 	_, dirname, _, _ := runtime.Caller(1)
 	filename := path.Join(path.Dir(dirname), "config.ini")
 
-	iniFile := config.NewINIFile(filename)
+	iniFile := config.NewINIFile("./config.ini")
 	log.WithFields(log.Fields{
-		"filename": (*iniFile),
+		"filename": filename,
 	}).Info("Reading config file")
 
 	return config.NewConfig([]config.Provider{iniFile})
