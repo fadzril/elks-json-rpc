@@ -4,7 +4,8 @@ import (
 	JSON "encoding/json"
 	"fmt"
 	"net/http"
-	"os"
+	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -25,8 +26,11 @@ func init() {
 }
 
 func initConfig() *config.Config {
-	cwd := os.Getenv("PWD")
-	iniFile := config.NewINIFile(cwd + "/config.ini")
+
+	_, dirname, _, _ := runtime.Caller(1)
+	filename := path.Join(path.Dir(dirname), "config.ini")
+
+	iniFile := config.NewINIFile(filename)
 	log.WithFields(log.Fields{
 		"filename": (*iniFile),
 	}).Info("Reading config file")
